@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping App</title>
+
+    <style>
+        body{
+            font-family: Arial;
+            background: pink;
+            margin: 0;
+        }
+
+        /* NAVBAR */
+        nav{
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: black;
+            padding: 10px 20px;
+            color: white;
+        }
+
+        .nav-links{
+            list-style: none;
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a{
+            text-decoration: none;
+            color: white;
+            font-weight: bold;
+        }
+
+        .nav-links a:hover{
+            color: pink;
+        }
+
+        nav input{
+            padding: 5px;
+        }
+
+        h1{
+            text-align: center;
+        }
+
+        /* PRODUCTS */
+        #products{
+            display: grid;
+            grid-template-columns: repeat(3,1fr);
+            gap: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .card{
+            background:white;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .card img{
+            width: 100px;
+        }
+
+        /* BUTTON */
+        button{
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        /* GREEN BUTTON */
+        .card button{
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .card button:hover{
+            background-color: darkgreen;
+        }
+
+        /* BUY BUTTON */
+        #buyBtn{
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: red;
+            color: white;
+        }
+
+        /* POPUP */
+        .popup{
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: green;
+            color: white;
+            padding: 10px;
+            display: none;
+        }
+
+        /* MODAL */
+        .modal{
+            display: none;
+            position: fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content{
+            background: white;
+            margin: 50px auto;
+            padding: 20px;
+            width: 50%;
+        }
+
+        /* CONTACT */
+        #contact{
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* FOOTER */
+        footer{
+            background: black;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav>
+    <h2>My Shop</h2>
+
+    <ul class="nav-links">
+        <li><a href="#">Home</a></li>
+        <li><a href="#products">Product</a></li>
+        <li><a href="#contact">Contact</a></li>
+        <li><a href="mailto:example@email.com">Email</a></li>
+    </ul>
+
+    <input type="text" id="search" placeholder="Search product...">
+</nav>
+
+<h1>Product List</h1>
+
+<div id="products"></div>
+
+<!-- BUY BUTTON -->
+<button id="buyBtn">Buy Now</button>
+
+<!-- POPUP -->
+<div id="popup" class="popup">Added to Cart!</div>
+
+<!-- BILL MODAL -->
+<div id="billModal" class="modal">
+    <div class="modal-content">
+        <h2>Your Bill</h2>
+        <div id="billItems"></div>
+        <h3 id="totalPrice"></h3>
+        <button onclick="closeBill()">Close</button>
+    </div>
+</div>
+
+<!-- CONTACT -->
+<section id="contact">
+    <h2>Contact Us</h2>
+    <p>Email: example@email.com</p>
+    <p>Phone: 1234567890</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+    <p>© 2026 My Shop | All Rights Reserved</p>
+</footer>
+
+<script>
+let allProducts = [];
+let cart = [];
+
+fetch("https://dummyjson.com/products")
+.then(res => res.json())
+.then(data => {
+    allProducts = data.products;
+    displayProducts(allProducts);
+});
+
+// DISPLAY PRODUCTS
+function displayProducts(products){
+    let container = document.getElementById("products");
+    container.innerHTML = "";
+
+    products.forEach(product => {
+
+        let card = document.createElement("div");
+        card.classList.add("card");
+
+        card.innerHTML = `
+            <img src="${product.thumbnail}">
+            <h3>${product.title}</h3>
+            <p>$${product.price}</p>
+            <button onclick="addToCart(${product.id})">Add to Cart</button>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+// ADD TO CART
+function addToCart(id){
+    let product = allProducts.find(p => p.id === id);
+    cart.push(product);
+
+    let popup = document.getElementById("popup");
+    popup.style.display = "block";
+
+    setTimeout(()=>{
+        popup.style.display = "none";
+    },2000);
+}
+
+// BUY BUTTON
+document.getElementById("buyBtn").addEventListener("click", () => {
+
+    let billItems = document.getElementById("billItems");
+    let total = 0;
+
+    billItems.innerHTML = "";
+
+    cart.forEach(item => {
+        total += item.price;
+
+        billItems.innerHTML += `
+            <div>
+                <img src="${item.thumbnail}" width="50">
+                ${item.title} - $${item.price}
+            </div>
+        `;
+    });
+
+    document.getElementById("totalPrice").innerText = "Total: $" + total;
+    document.getElementById("billModal").style.display = "block";
+});
+
+// CLOSE BILL
+function closeBill(){
+    document.getElementById("billModal").style.display = "none";
+}
+
+// SEARCH
+document.getElementById("search").addEventListener("input", (e) => {
+    let value = e.target.value.toLowerCase();
+
+    let filtered = allProducts.filter(p => 
+        p.title.toLowerCase().includes(value)
+    );
+
+    displayProducts(filtered);
+});
+</script>
+
+</body>
+</html>
